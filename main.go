@@ -7,29 +7,45 @@ import (
 	"net/http"
 )
 
+func init() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+}
+
+func badRequest(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprint(w, "Bad Request")
+	log.Print(message)
+}
+
 func systemhookReceive(w http.ResponseWriter, r *http.Request) {
 
-	// headerチェックもした方がいいかも
-	// POST以外はリターン
-	if r.Method != "POST" {
-		fmt.Printf("Not POST method\n")
+	// Gitlabのシステムフック以外は400でリターン
+	if r.Header.Get("X-Gitlab-Event") != "System Hook" {
+		badRequest(w, "Not exsit X-Gitlab-Event header")
 		return
 	}
 
-	// JSONパース
+	// POST以外は400でリターン
+	if r.Method != "POST" {
+		badRequest(w, "Not POST Method")
+		return
+	}
+
+	// JSONパース,デコードエラー時は400でリターン
 	decoder := json.NewDecoder(r.Body)
 	var j interface{}
 	err := decoder.Decode(&j)
 	if err != nil {
-		panic(err)
+		badRequest(w, "decord error")
+		return
 	}
 
-	// JSON出力部分
-	fmt.Printf("%v\n", j)
+	// デバッグ用JSON出力部分
+	log.Printf("%v\n", j)
 	m := j.(map[string]interface{})
-	fmt.Printf("%s\n", m["event_name"])
-	fmt.Printf("%s\n", m["name"])
-	fmt.Printf("%s\n", m["owner_name"])
+	log.Printf("%s\n", m["event_name"])
+	log.Printf("%s\n", m["name"])
+	log.Printf("%s\n", m["owner_name"])
 }
 
 func main() {
