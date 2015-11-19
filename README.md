@@ -1,6 +1,5 @@
 # gitlab-systemhook-receiver
 
-
 ## 仕様
 * gitlabのsystem-hookを受け取ってJSONをパースする
  * 受け取るJSON情報はこちらhttps://devops.nes.nec.co.jp/gitlab/help/system_hooks/system_hooks
